@@ -1,0 +1,57 @@
+name: Publish UDS Advanced Algorithms Course (PDF Artefact)
+
+on:
+  push:
+    branches: [main, 'feat/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-course:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout pipeline repository
+        uses: actions/checkout@v4
+
+      - name: Checkout private core course repository
+        uses: actions/checkout@v4
+        with:
+          repository: uds-fs-in4-rsd-algorithmique/advanced-algorithms-core
+          ref: feat/advanced-algorithms-core-baseline
+          token: ${{ secrets.UDS_CORE_TOKEN }}
+          path: core-repo
+
+      - name: Setup Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: release   # <-- Utilise 'release' au lieu de 'latest' pour éviter l'erreur 404
+
+      - name: Setup LaTeX (XeLaTeX & TeX Live)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            texlive-xetex \
+            texlive-latex-base \
+            texlive-latex-recommended \
+            texlive-latex-extra \
+            texlive-fonts-recommended \
+            texlive-lang-european \
+            librsvg2-bin
+
+      - name: Compile Quarto Book to PDF and Docx
+        working-directory: ./core-repo/cours
+        run: |
+          quarto render . --to pdf
+
+      - name: Upload Compiled Academic Deliverables
+        uses: actions/upload-artifact@v4
+        with:
+          name: uds-algorithmic-course-deliverables
+          path: |
+            core-repo/cours/_build/*.pdf
+            core-repo/cours/_build/*.docx
+            core-repo/cours/**/*.tex
+          if-no-files-found: error
+          retention-days: 90
