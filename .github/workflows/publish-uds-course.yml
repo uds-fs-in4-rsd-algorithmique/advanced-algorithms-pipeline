@@ -26,7 +26,7 @@ jobs:
       - name: Setup Quarto
         uses: quarto-dev/quarto-actions/setup@v2
         with:
-          version: latest   # <-- Utilise la dernière version pour satisfaire l'exigence >=1.9.0 de l'extension pseudocode
+          version: release   # <-- Utilise 'release' au lieu de 'latest' pour éviter l'erreur 404
 
       - name: Setup LaTeX (XeLaTeX & TeX Live)
         run: |
