@@ -10,19 +10,33 @@ permissions:
 
 jobs:
   build-course:
-  
     runs-on: ubuntu-latest
     steps:
       - name: Checkout pipeline repository
         uses: actions/checkout@v4
 
-      - name: Compile Quarto Book to PDF and Docx
+      - name: Fetch private core course files from advanced-algorithms-core
+        env:
+          GH_TOKEN: ${{ secrets.UDS_CORE_TOKEN || github.token }}
         run: |
-          quarto render . --to pdf
-          quarto render . --to docx
+          mkdir -p cours
+          # Téléchargement de l'archive tarball des sources du cours depuis le dépôt core privé
+          curl -fsSL \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/uds-fs-in4-rsd-algorithmique/advanced-algorithms-core/tarball/feat/advanced-algorithms-core-baseline" \
+            -o /tmp/core.tar.gz
+
+          # Extraction propre de l'archive dans un dossier temporaire de staging
+          mkdir -p /tmp/core-extracted
+          tar -xzf /tmp/core.tar.gz -C /tmp/core-extracted --strip-components=1
           
-          # Extraction du dossier cours/ contenu dans l'archive
-          tar -xzf /tmp/core.tar.gz --strip-components=2 --wildcards '*/cours/*'
+          # Copie des sources vers le répertoire de travail local de Quarto
+          if [ -d "/tmp/core-extracted/cours" ]; then
+            cp -r /tmp/core-extracted/cours/* .
+          else
+            cp -r /tmp/core-extracted/* .
+          fi
 
       - name: Setup Quarto
         uses: quarto-dev/quarto-actions/setup@v2
@@ -50,7 +64,7 @@ jobs:
         with:
           name: uds-algorithmic-course-deliverables
           path: |
-            cours/_build/pdf/*.pdf
-            cours/_build/docx/*.docx
-            cours/**/*.tex
+            _build/pdf/*.pdf
+            _build/docx/*.docx
+            **/*.tex
           retention-days: 90
