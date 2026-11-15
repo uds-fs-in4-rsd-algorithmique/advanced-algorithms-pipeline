@@ -1,0 +1,63 @@
+name: Publish UDS Advanced Algorithms Course (PDF & Docx)
+
+on:
+  push:
+    branches: [main, 'feat/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-course:
+  
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout pipeline repository
+        uses: actions/checkout@v4
+
+      - name: Fetch private core course files from advanced-algorithms-core
+        env:
+          GH_TOKEN: ${{ secrets.UDS_CORE_TOKEN || github.token }}
+        run: |
+          mkdir -p cours
+          # Téléchargement de l'archive tarball des sources du cours depuis le dépôt core privé
+          curl -fsSL \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/uds-fs-in4-rsd-algorithmique/advanced-algorithms-core/tarball/feat/advanced-algorithms-core-baseline" \
+            -o /tmp/core.tar.gz
+          
+          # Extraction du dossier cours/ contenu dans l'archive
+          tar -xzf /tmp/core.tar.gz --strip-components=2 --wildcards '*/cours/*'
+
+      - name: Setup Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: 1.6.42
+
+      - name: Setup LaTeX (XeLaTeX & TeX Live)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            texlive-xetex \
+            texlive-latex-base \
+            texlive-latex-recommended \
+            texlive-latex-extra \
+            texlive-fonts-recommended \
+            texlive-lang-european
+
+      - name: Compile Quarto Book to PDF and Docx
+        run: |
+          quarto render cours --to pdf
+          quarto render cours --to docx
+
+      - name: Upload Compiled Academic Deliverables
+        uses: actions/upload-artifact@v4
+        with:
+          name: uds-algorithmic-course-deliverables
+          path: |
+            cours/_build/pdf/*.pdf
+            cours/_build/docx/*.docx
+            cours/**/*.tex
+          retention-days: 90
