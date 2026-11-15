@@ -16,17 +16,10 @@ jobs:
       - name: Checkout pipeline repository
         uses: actions/checkout@v4
 
-      - name: Fetch private core course files from advanced-algorithms-core
-        env:
-          GH_TOKEN: ${{ secrets.UDS_CORE_TOKEN || github.token }}
+      - name: Compile Quarto Book to PDF and Docx
         run: |
-          mkdir -p cours
-          # Téléchargement de l'archive tarball des sources du cours depuis le dépôt core privé
-          curl -fsSL \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/uds-fs-in4-rsd-algorithmique/advanced-algorithms-core/tarball/feat/advanced-algorithms-core-baseline" \
-            -o /tmp/core.tar.gz
+          quarto render . --to pdf
+          quarto render . --to docx
           
           # Extraction du dossier cours/ contenu dans l'archive
           tar -xzf /tmp/core.tar.gz --strip-components=2 --wildcards '*/cours/*'
@@ -49,8 +42,8 @@ jobs:
 
       - name: Compile Quarto Book to PDF and Docx
         run: |
-          quarto render cours --to pdf
-          quarto render cours --to docx
+          quarto render . --to pdf
+          quarto render . --to docx
 
       - name: Upload Compiled Academic Deliverables
         uses: actions/upload-artifact@v4
