@@ -27,15 +27,15 @@ jobs:
             "https://api.github.com/repos/uds-fs-in4-rsd-algorithmique/advanced-algorithms-core/tarball/feat/advanced-algorithms-core-baseline" \
             -o /tmp/core.tar.gz
 
-          # Extraction propre de l'archive dans un dossier temporaire de staging
+          # Extraction propre dans un dossier temporaire
           mkdir -p /tmp/core-extracted
           tar -xzf /tmp/core.tar.gz -C /tmp/core-extracted --strip-components=1
           
-          # Copie des sources vers le répertoire de travail local de Quarto
+          # Copie de l'arborescence dans le dossier cours/ attendu
           if [ -d "/tmp/core-extracted/cours" ]; then
-            cp -r /tmp/core-extracted/cours/* .
+            cp -r /tmp/core-extracted/cours/* cours/
           else
-            cp -r /tmp/core-extracted/* .
+            cp -r /tmp/core-extracted/* cours/
           fi
 
       - name: Setup Quarto
@@ -55,6 +55,7 @@ jobs:
             texlive-lang-european
 
       - name: Compile Quarto Book to PDF and Docx
+        working-directory: ./cours
         run: |
           quarto render . --to pdf
           quarto render . --to docx
@@ -64,7 +65,7 @@ jobs:
         with:
           name: uds-algorithmic-course-deliverables
           path: |
-            _build/pdf/*.pdf
-            _build/docx/*.docx
-            **/*.tex
+            cours/_build/pdf/*.pdf
+            cours/_build/docx/*.docx
+            cours/**/*.tex
           retention-days: 90
