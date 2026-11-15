@@ -51,7 +51,8 @@ jobs:
         with:
           name: uds-algorithmic-course-deliverables
           path: |
-            core-repo/cours/_build/pdf/*.pdf
-            core-repo/cours/_build/docx/*.docx
+            core-repo/cours/_build/*.pdf
+            core-repo/cours/_build/*.docx
             core-repo/cours/**/*.tex
+          if-no-files-found: error
           retention-days: 90
