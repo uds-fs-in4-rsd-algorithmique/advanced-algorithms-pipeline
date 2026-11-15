@@ -15,28 +15,13 @@ jobs:
       - name: Checkout pipeline repository
         uses: actions/checkout@v4
 
-      - name: Fetch private core course files from advanced-algorithms-core
-        env:
-          GH_TOKEN: ${{ secrets.UDS_CORE_TOKEN || github.token }}
-        run: |
-          mkdir -p cours
-          # Téléchargement de l'archive tarball des sources du cours depuis le dépôt core privé
-          curl -fsSL \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/uds-fs-in4-rsd-algorithmique/advanced-algorithms-core/tarball/feat/advanced-algorithms-core-baseline" \
-            -o /tmp/core.tar.gz
-
-          # Extraction propre dans un dossier temporaire
-          mkdir -p /tmp/core-extracted
-          tar -xzf /tmp/core.tar.gz -C /tmp/core-extracted --strip-components=1
-          
-          # Copie de l'arborescence dans le dossier cours/ attendu
-          if [ -d "/tmp/core-extracted/cours" ]; then
-            cp -r /tmp/core-extracted/cours/* cours/
-          else
-            cp -r /tmp/core-extracted/* cours/
-          fi
+      - name: Checkout private core course repository
+        uses: actions/checkout@v4
+        with:
+          repository: uds-fs-in4-rsd-algorithmique/advanced-algorithms-core
+          ref: feat/advanced-algorithms-core-baseline
+          token: ${{ secrets.UDS_CORE_TOKEN }}
+          path: core-repo
 
       - name: Setup Quarto
         uses: quarto-dev/quarto-actions/setup@v2
@@ -52,10 +37,11 @@ jobs:
             texlive-latex-recommended \
             texlive-latex-extra \
             texlive-fonts-recommended \
-            texlive-lang-european
+            texlive-lang-european \
+            librsvg2-bin
 
       - name: Compile Quarto Book to PDF and Docx
-        working-directory: ./cours
+        working-directory: ./core-repo/cours
         run: |
           quarto render . --to pdf
           quarto render . --to docx
@@ -65,7 +51,7 @@ jobs:
         with:
           name: uds-algorithmic-course-deliverables
           path: |
-            cours/_build/pdf/*.pdf
-            cours/_build/docx/*.docx
-            cours/**/*.tex
+            core-repo/cours/_build/pdf/*.pdf
+            core-repo/cours/_build/docx/*.docx
+            core-repo/cours/**/*.tex
           retention-days: 90
