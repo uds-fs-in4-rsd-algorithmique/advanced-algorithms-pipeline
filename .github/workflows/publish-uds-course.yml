@@ -43,7 +43,6 @@ jobs:
       - name: Compile Quarto Book to PDF and Docx
         working-directory: ./core-repo/cours
         run: |
-          quarto add leovan/quarto-pseudocode
           quarto render . --to pdf,docx
 
       - name: Upload Compiled Academic Deliverables
