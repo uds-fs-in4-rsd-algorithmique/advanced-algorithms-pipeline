@@ -43,7 +43,8 @@ jobs:
       - name: Compile Quarto Book to PDF and Docx
         working-directory: ./core-repo/cours
         run: |
-          quarto render . --to pdf,docx
+          quarto render . --to pdf
+          quarto render . --to docx
 
       - name: Upload Compiled Academic Deliverables
         uses: actions/upload-artifact@v4
