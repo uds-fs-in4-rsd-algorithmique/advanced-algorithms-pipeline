@@ -38,13 +38,12 @@ jobs:
             texlive-latex-extra \
             texlive-fonts-recommended \
             texlive-lang-european \
-            librsvg2-bin
+            texlive-science
 
       - name: Compile Quarto Book to PDF and Docx
         working-directory: ./core-repo/cours
         run: |
-          quarto render . --to pdf
-          quarto render . --to docx
+          quarto render .
 
       - name: Upload Compiled Academic Deliverables
         uses: actions/upload-artifact@v4
